@@ -1,1 +1,1 @@
-# Improve the GAN to makde prograss
+# Improve the GAN to make prograss

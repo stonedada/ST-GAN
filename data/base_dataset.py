@@ -4,6 +4,7 @@ It also includes common transformation functions (e.g., get_transform, __scale_w
 """
 import random
 import numpy as np
+import torch
 import torch.utils.data as data
 from PIL import Image
 import torchvision.transforms as transforms
@@ -165,3 +166,9 @@ def __print_size_warning(ow, oh, w, h):
               "(%d, %d). This adjustment will be done to all images "
               "whose sizes are not multiples of 4" % (ow, oh, w, h))
         __print_size_warning.has_printed = True
+
+def __transform2zscore(img):
+    im_mean = torch.mean(img)
+    im_std = torch.std(img)
+    norm_img = (img - im_mean) / im_std
+    return norm_img

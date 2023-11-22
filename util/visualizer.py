@@ -193,9 +193,10 @@ class Visualizer():
             self.saved = True
             # save images to the disk
             for label, image in visuals.items():
-                image_numpy = util.tensor2im(image)
+                # image_numpy = util.tensor2im(image)
                 # img_path = os.path.join(self.img_dir, 'epoch%.3d_%s.png' % (epoch, label))
                 # util.save_image(image_numpy, img_path)
+                image_numpy = util.tensor2numpy(image)
                 img_path = os.path.join(self.img_dir, 'epoch%.3d_%s.tif' % (epoch, label))   # modify the image format
                 util.save_tif(image_numpy, img_path)
             # update website

@@ -11,7 +11,7 @@ DEVICE = get_device()
 
 
 class SwinTransformerUNetParallel(nn.Module):
-    def __init__(self, channels: Tuple[int], num_heads: int = 2, image_size: int = 128, is_residual: bool = False,
+    def __init__(self, channels: Tuple[int], num_heads: int = 2, image_size: int = 128, is_residual: bool = False, norm= nn.BatchNorm2d,
                  bias=False) -> None:
         super(SwinTransformerUNetParallel, self).__init__()
 
@@ -51,7 +51,7 @@ class SwinTransformerUNetParallel(nn.Module):
         # split image into non-overlapping patches
         self.patch_embed = PatchEmbed(
             img_size=128, patch_size=1, in_chans=3, embed_dim=embed_dim,
-            norm_layer=nn.LayerNorm).to('cuda:2')
+            norm_layer=norm)
         patches_resolution = self.patch_embed.patches_resolution
         self.patches_resolution = patches_resolution
 
@@ -72,9 +72,9 @@ class SwinTransformerUNetParallel(nn.Module):
                                qkv_bias=qkv_bias, qk_scale=qk_scale,
                                drop=drop_rate, attn_drop=attn_drop_rate,
                                drop_path=dpr[sum(depths[:i_layer]):sum(depths[:i_layer + 1])],
-                               norm_layer=nn.LayerNorm,
+                               norm_layer=norm,
                                downsample=PatchMerging,
-                               use_checkpoint=use_checkpoint).to('cuda:2')
+                               use_checkpoint=use_checkpoint)
             self.layers.append(layer)
         self.pool = nn.MaxPool2d(2)
     def forward(self, x: torch.Tensor) -> torch.Tensor:

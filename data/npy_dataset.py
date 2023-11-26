@@ -38,12 +38,20 @@ class NpyDataset(BaseDataset):
             A_paths (str) - - image paths
             B_paths (str) - - image paths (same as A_paths)
         """
-        slice_name = self.sample_list[index].strip('\n')
-        data_path = os.path.join(self.data_dir, slice_name)
-        label_name = slice_name.replace('c001', 'c000').replace('sl0-3', 'sl0-1')
-        label_path = self.label_dir + label_name
-        image = np.load(data_path)
-        label = np.load(label_path)
+        if 'train' in self.data_dir:
+            slice_name = self.sample_list[index].strip('\n')
+            data_path = os.path.join(self.data_dir, slice_name)
+            label_name = slice_name.replace('c001', 'c000').replace('sl0-3', 'sl0-1')
+            label_path = self.label_dir + label_name
+            image = np.load(data_path)
+            label = np.load(label_path)
+        else:
+            slice_name = self.sample_list[index].strip('\n')
+            data_path = os.path.join(self.data_dir, slice_name)
+            label_name = slice_name.replace('c001', 'c000')
+            label_path = self.label_dir + label_name
+            image = np.load(data_path)
+            label = np.load(label_path)
         image = torch.from_numpy(image.astype(np.float32))
         label = torch.from_numpy(label.astype(np.float32))
 

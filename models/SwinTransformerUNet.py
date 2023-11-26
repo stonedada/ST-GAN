@@ -11,12 +11,13 @@ DEVICE = get_device()
 
 
 class SwinTransformerUNetParallel(nn.Module):
-    def __init__(self, channels: Tuple[int], num_heads: int = 2, image_size: int = 128, is_residual: bool = False, norm= nn.BatchNorm2d,
-                 bias=False) -> None:
+    def __init__(self, channels: Tuple[int], num_heads: int = 2, image_size: int = 128, is_residual: bool = False,
+                 bias=False, norm=nn.BatchNorm2d, ) -> None:
         super(SwinTransformerUNetParallel, self).__init__()
 
         self.channels = channels
-        self.encode = nn.ModuleList([EncoderLayer(channels[i], channels[i + 1], is_residual, bias) for i in range(len(channels) - 2)])
+        self.encode = nn.ModuleList(
+            [EncoderLayer(channels[i], channels[i + 1], is_residual, bias) for i in range(len(channels) - 2)])
         self.bottle_neck = ConvBlock(channels[-2], channels[-1], is_residual, bias)
         self.pos_embed_mhsa = nn.Parameter(torch.randn(1, channels[-1], image_size // (2 ** (len(channels) - 2)),
                                                        image_size // (2 ** (len(channels) - 2))))
@@ -26,7 +27,7 @@ class SwinTransformerUNetParallel(nn.Module):
              for i in reversed(range(1, len(channels) - 1))])
         self.pos_embed_skip_x = nn.ParameterList([nn.Parameter(
             torch.randn(1, channels[i], image_size // (2 ** (i - 1)), image_size // (2 ** (i - 1)))) for i
-                                                  in reversed(range(1, len(channels) - 1))])
+            in reversed(range(1, len(channels) - 1))])
         self.mhca = nn.ModuleList(
             [MultiHeadCrossAttention(channels[i], num_heads, channels[i], channels[i + 1], bias) for i in
              reversed(range(1, len(channels) - 1))])
@@ -77,6 +78,7 @@ class SwinTransformerUNetParallel(nn.Module):
                                use_checkpoint=use_checkpoint)
             self.layers.append(layer)
         self.pool = nn.MaxPool2d(2)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         skip_x_list: List[torch.Tensor] = []
         skip_x, x = self.patch_embed(x)
@@ -104,21 +106,20 @@ class SwinTransformerUNetParallel(nn.Module):
                 nn.init.kaiming_uniform_(m.weight.data)
                 if m.bias is not None:
                     m.bias.data.fill_(0.1)
-                    
-                    
+
     def load_from(self, pretrained_path):
         if pretrained_path is not None:
             print("pretrained_path:{}".format(pretrained_path))
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             pretrained_dict = torch.load(pretrained_path, map_location=device)
-            if "model"  not in pretrained_dict:
+            if "model" not in pretrained_dict:
                 print("---start load pretrained modle by splitting---")
-                pretrained_dict = {k[17:]:v for k,v in pretrained_dict.items()}
+                pretrained_dict = {k[17:]: v for k, v in pretrained_dict.items()}
                 for k in list(pretrained_dict.keys()):
                     if "output" in k:
                         print("delete key:{}".format(k))
                         del pretrained_dict[k]
-                msg = self.load_state_dict(pretrained_dict,strict=False)
+                msg = self.load_state_dict(pretrained_dict, strict=False)
                 # print(msg)
                 return
             pretrained_dict = pretrained_dict['model']
@@ -128,9 +129,9 @@ class SwinTransformerUNetParallel(nn.Module):
             full_dict = copy.deepcopy(pretrained_dict)
             for k, v in pretrained_dict.items():
                 if "layers." in k:
-                    current_layer_num = 3-int(k[7:8])
+                    current_layer_num = 3 - int(k[7:8])
                     current_k = "layers_up." + str(current_layer_num) + k[8:]
-                    full_dict.update({current_k:v})
+                    full_dict.update({current_k: v})
             for k in list(full_dict.keys()):
                 # if k in model_dict:
                 #     if full_dict[k].shape != model_dict[k].shape:
@@ -142,7 +143,8 @@ class SwinTransformerUNetParallel(nn.Module):
             msg = self.load_state_dict(full_dict, strict=False)
             # print(msg)
         else:
-            print("none pretrain")  
+            print("none pretrain")
+
 
 class MultiHeadSelfAttention(nn.Module):
     def __init__(self, embed_dim: int, num_heads: int, bias=False) -> None:
@@ -310,7 +312,7 @@ class BasicLayer(nn.Module):
             x = self.downsample(x)
             skip_x = x
         B, L, C = skip_x.shape
-        w =int(L ** 0.5)
+        w = int(L ** 0.5)
         skip_x = skip_x.permute(0, 2, 1).contiguous().view(B, C, w, w)
         return skip_x, x
 
@@ -650,4 +652,3 @@ def window_reverse(windows, window_size, H, W):
     x = windows.view(B, H // window_size, W // window_size, window_size, window_size, -1)
     x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
     return x
-

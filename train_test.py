@@ -36,6 +36,7 @@ if __name__ == '__main__':
     print('The number of training images = %d' % dataset_size)
 
     opt_val = TrainOptions().parse()  # create options for your validation dataset
+    # opt_val.dataroot = '/home/dataset/npy_test/npy_256'
     opt_val.phase = 'test'  # specify where your test images are saved
     opt_val.preprocess = 'center'  # you don't want data-augmentation in validation, unless you're using U-Net, then you might need to crop! If so, just remove this line.
     opt_val.crop_size = 128
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     if not os.path.exists(metric_dir):
         os.makedirs(metric_dir)
     # define logging
-    logging.basicConfig(filename=opt.checkpoints_dir + opt.name + "/train_log.txt", level=logging.INFO,
+    logging.basicConfig(filename=opt.checkpoints_dir + '/'+opt.name + "/train_log.txt", level=logging.INFO,
                         format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     for epoch in range(opt.epoch_count,
@@ -102,9 +103,6 @@ if __name__ == '__main__':
             model.test()  # run inference
             visuals = model.get_current_visuals()  # get image results
             Metrics(i, frames_meta, visuals, metric_dir)
-            img_path = model.get_image_paths()  # get image paths
-            if i % 5 == 0:  # save images to an HTML file
-                print('processing (%04d)-th image... %s' % (i, img_path))
 
         # save metrics csvfile to disk
         frames_meta_filename = os.path.join(metric_dir, "inference.csv")

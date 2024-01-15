@@ -171,7 +171,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif netG == 'ST-Net':
         net = SwinTransformerUNetParallel(channels, heads, size[0], is_residual, bias, norm=nn.LayerNorm)
-        snapshot = "/home/ST-GAN/checkpoints/pretrain/latest_net_G.pth"
+        snapshot = "/home/ST-cGAN/checkpoints/pretrain/nuclei/latest_net_G.pth"
         if snapshot:
             net.load_state_dict(torch.load(snapshot), strict=True)
             if len(gpu_ids) > 0:
@@ -179,12 +179,13 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
                 net.to(gpu_ids[0])
                 net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
             print('Generator has load pretrain checkpoint !')
+            return net
         else:
             print('fail to init generator!')
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
-    # return init_net(net, init_type, init_gain, gpu_ids)
-    return net
+    return init_net(net, init_type, init_gain, gpu_ids)
+
 
 
 def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[]):

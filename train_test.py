@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # opt_val.dataroot = '/home/dataset/npy_test/npy_256'
     opt_val.phase = 'test'  # specify where your test images are saved
     opt_val.preprocess = 'center'  # you don't want data-augmentation in validation, unless you're using U-Net, then you might need to crop! If so, just remove this line.
-    opt_val.crop_size = 128
+    # opt_val.crop_size = 128      # when model name == STGAN
     opt_val.no_flip = True
     opt_val.serial_batches = True  # with this option, it's always the same test image that is saved during training, which helps with seeing the evolution of the performance
     opt_val.batch_size = 1
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     if not os.path.exists(metric_dir):
         os.makedirs(metric_dir)
     # define logging
-    logging.basicConfig(filename=opt.checkpoints_dir + '/'+opt.name + "/train_log.txt", level=logging.INFO,
+    logging.basicConfig(filename=opt.checkpoints_dir + '/' + opt.name + "/train_log.txt", level=logging.INFO,
                         format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     for epoch in range(opt.epoch_count,
@@ -114,4 +114,4 @@ if __name__ == '__main__':
             model.save_networks(epoch)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (
-        epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
+            epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
